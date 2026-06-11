@@ -22,19 +22,15 @@ jobs:
       - name: Create Flutter project
         run: |
           flutter create --org com.deepfocus --project-name deep_focus_pro tmp_project
+          rm -rf android
           cp -r tmp_project/android .
           rm -rf tmp_project
-
-      - name: Fix compileSdkVersion
-        run: |
-          sed -i 's/compileSdkVersion 34/compileSdkVersion 35/g' android/app/build.gradle
-          sed -i 's/targetSdkVersion 34/targetSdkVersion 35/g' android/app/build.gradle
 
       - name: Get dependencies
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-shrink
 
       - uses: actions/upload-artifact@v4
         with:
