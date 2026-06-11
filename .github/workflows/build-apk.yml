@@ -25,6 +25,11 @@ jobs:
           cp -r tmp_project/android .
           rm -rf tmp_project
 
+      - name: Fix compileSdkVersion
+        run: |
+          sed -i 's/compileSdkVersion 34/compileSdkVersion 35/g' android/app/build.gradle
+          sed -i 's/targetSdkVersion 34/targetSdkVersion 35/g' android/app/build.gradle
+
       - name: Get dependencies
         run: flutter pub get
 
