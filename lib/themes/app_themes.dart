@@ -27,6 +27,12 @@ class AppThemes {
           primary: const Color(0xFFF0A028),
           secondary: const Color(0xFFD46A0F),
         );
+      case 'red':
+        return _buildTheme(
+          background: const Color(0xFF120808),
+          primary: const Color(0xFFE53935),
+          secondary: const Color(0xFFB71C1C),
+        );
       default:
         return _buildTheme(
           background: const Color(0xFF08090D),
@@ -49,13 +55,36 @@ class AppThemes {
         background: background,
         primary: primary,
         secondary: secondary,
-        surface: background.withOpacity(0.8),
+        surface: background,
       ),
       cardColor: background.withOpacity(0.6),
       appBarTheme: AppBarTheme(
         backgroundColor: background,
         foregroundColor: primary,
         elevation: 0,
+        centerTitle: true,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: background,
+        indicatorColor: primary.withOpacity(0.15),
+        labelTextStyle: MaterialStateProperty.all(
+          const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+        ),
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: primary,
+        thumbColor: primary,
+        overlayColor: primary.withOpacity(0.2),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: MaterialStateProperty.resolveWith(
+          (states) => states.contains(MaterialState.selected) ? primary : Colors.white38,
+        ),
+        trackColor: MaterialStateProperty.resolveWith(
+          (states) => states.contains(MaterialState.selected)
+              ? primary.withOpacity(0.4)
+              : Colors.white12,
+        ),
       ),
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: Colors.white),
