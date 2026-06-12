@@ -17,6 +17,27 @@ class _FocusScreenState extends State<FocusScreen>
   bool _isRunning = false;
   bool _isBreak = false;
   late AnimationController _pulseController;
+  late AnimationController _progressController;
+  String _selectedSound = 'none';
+
+  final List<Map<String, dynamic>> _sounds = [
+    {'id': 'none', 'label': 'بدون صوت', 'icon': '🔇'},
+    {'id': 'rain', 'label': 'مطر', 'icon': '🌧️'},
+    {'id': 'forest', 'label': 'غابة', 'icon': '🌲'},
+    {'id': 'birds', 'label': 'عصافير', 'icon': '🐦'},
+    {'id': 'ocean', 'label': 'أمواج', 'icon': '🌊'},
+    {'id': 'wind', 'label': 'رياح', 'icon': '💨'},
+    {'id': 'fire', 'label': 'نار', 'icon': '🔥'},
+    {'id': 'cafe', 'label': 'كافيه', 'icon': '☕'},
+  ];
+
+  final List<String> _motivationalQuotes = [
+    'ركز! أنت أقرب مما تعتقد 💪',
+    'كل دقيقة تركيز تقربك من هدفك 🎯',
+    'الانضباط يبني المستقبل 🚀',
+    'لا تستسلم، النجاح قادم ⭐',
+    'أنت أقوى من أي تشتيت 🛡️',
+  ];
 
   @override
   void initState() {
@@ -27,12 +48,14 @@ class _FocusScreenState extends State<FocusScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+    _progressController = AnimationController(vsync: this, duration: const Duration(seconds: 1));
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _pulseController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
@@ -88,18 +111,33 @@ class _FocusScreenState extends State<FocusScreen>
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Session Complete! 🎉',
-            style: TextStyle(color: primary, fontWeight: FontWeight.bold)),
-        content: const Text('Great work! Time for a break.',
-            style: TextStyle(color: Colors.white70)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('أحسنت! 🎉',
+            style: TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 22)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('جلسة تركيز مكتملة بنجاح!',
+                style: TextStyle(color: Colors.white70)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _motivationalQuotes[DateTime.now().second % _motivationalQuotes.length],
+                style: TextStyle(color: primary, fontStyle: FontStyle.italic),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _startTimer();
-            },
-            child: Text('Start Break', style: TextStyle(color: primary)),
+            onPressed: () { Navigator.pop(context); _startTimer(); },
+            child: Text('ابدأ الاستراحة ☕', style: TextStyle(color: primary)),
           ),
         ],
       ),
@@ -116,121 +154,220 @@ class _FocusScreenState extends State<FocusScreen>
   Widget build(BuildContext context) {
     final provider = Provider.of<AppProvider>(context);
     final primary = Theme.of(context).colorScheme.primary;
-    final total = (_isBreak
-            ? provider.breakDuration
-            : provider.focusDuration) *
-        60;
+    final total = (_isBreak ? provider.breakDuration : provider.focusDuration) * 60;
     final progress = 1 - (_secondsLeft / total);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isBreak ? 'Break Time' : 'Focus Session'),
+        title: Text(_isBreak ? '☕ استراحة' : '🎯 جلسة تركيز',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_rounded),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              _isBreak ? '☕ Take a Break' : '🎯 Stay Focused',
-              style: const TextStyle(color: Colors.white54, fontSize: 16),
-            ),
-            const SizedBox(height: 50),
+            const SizedBox(height: 20),
 
             // Timer Circle
-            AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 260,
-                      height: 260,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 8,
-                        backgroundColor: Colors.white12,
-                        valueColor: AlwaysStoppedAnimation(primary),
-                      ),
-                    ),
-                    Column(
+            Expanded(
+              flex: 3,
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    return Stack(
+                      alignment: Alignment.center,
                       children: [
-                        Text(
-                          _formatTime(_secondsLeft),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 64,
-                            fontWeight: FontWeight.w200,
-                            letterSpacing: 4,
+                        // Glow effect
+                        if (_isRunning)
+                          Container(
+                            width: 280 + (_pulseController.value * 10),
+                            height: 280 + (_pulseController.value * 10),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primary.withOpacity(0.1 + _pulseController.value * 0.1),
+                                  blurRadius: 40,
+                                  spreadRadius: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        SizedBox(
+                          width: 260,
+                          height: 260,
+                          child: CircularProgressIndicator(
+                            value: progress,
+                            strokeWidth: 10,
+                            backgroundColor: Colors.white.withOpacity(0.08),
+                            valueColor: AlwaysStoppedAnimation(primary),
+                            strokeCap: StrokeCap.round,
                           ),
                         ),
-                        Text(
-                          _isBreak ? 'Break' : 'Focus',
-                          style: TextStyle(
-                              color: primary.withOpacity(0.7), fontSize: 16),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formatTime(_secondsLeft),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 68,
+                                fontWeight: FontWeight.w200,
+                                letterSpacing: 4,
+                              ),
+                            ),
+                            Text(
+                              _isBreak ? 'استراحة' : 'تركيز',
+                              style: TextStyle(color: primary.withOpacity(0.8), fontSize: 16),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${(progress * 100).toInt()}%',
+                              style: TextStyle(color: Colors.white38, fontSize: 13),
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                  ],
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
 
-            const SizedBox(height: 60),
+            // Sound Selector
+            SizedBox(
+              height: 60,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _sounds.length,
+                itemBuilder: (context, index) {
+                  final sound = _sounds[index];
+                  final isSelected = _selectedSound == sound['id'];
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedSound = sound['id']),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? primary.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? primary : Colors.white12,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(sound['icon'], style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: 6),
+                          Text(sound['label'],
+                              style: TextStyle(
+                                  color: isSelected ? primary : Colors.white54,
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 20),
 
             // Controls
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: _resetTimer,
-                  icon: const Icon(Icons.refresh, color: Colors.white54),
-                  iconSize: 36,
-                ),
-                const SizedBox(width: 30),
-                GestureDetector(
-                  onTap: _isRunning ? _pauseTimer : _startTimer,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: primary,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: primary.withOpacity(0.4),
-                          blurRadius: 20,
-                          spreadRadius: 5,
+            Expanded(
+              flex: 2,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _ControlButton(
+                        icon: Icons.refresh_rounded,
+                        onTap: _resetTimer,
+                        color: Colors.white38,
+                        size: 50,
+                      ),
+                      const SizedBox(width: 24),
+                      GestureDetector(
+                        onTap: _isRunning ? _pauseTimer : _startTimer,
+                        child: Container(
+                          width: 85,
+                          height: 85,
+                          decoration: BoxDecoration(
+                            color: primary,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: primary.withOpacity(0.4),
+                                blurRadius: 25,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            color: Colors.black,
+                            size: 45,
+                          ),
                         ),
-                      ],
-                    ),
-                    child: Icon(
-                      _isRunning ? Icons.pause : Icons.play_arrow,
-                      color: Colors.black,
-                      size: 40,
-                    ),
+                      ),
+                      const SizedBox(width: 24),
+                      _ControlButton(
+                        icon: Icons.skip_next_rounded,
+                        onTap: _onTimerComplete,
+                        color: Colors.white38,
+                        size: 50,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 30),
-                IconButton(
-                  onPressed: _onTimerComplete,
-                  icon: const Icon(Icons.skip_next, color: Colors.white54),
-                  iconSize: 36,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 40),
-            Text(
-              'Sessions today: ${provider.totalSessions}',
-              style: const TextStyle(color: Colors.white38, fontSize: 14),
+                  const SizedBox(height: 20),
+                  Text(
+                    'جلسات اليوم: ${provider.totalSessions}',
+                    style: const TextStyle(color: Colors.white38, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ControlButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color color;
+  final double size;
+
+  const _ControlButton({
+    required this.icon,
+    required this.onTap,
+    required this.color,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Icon(icon, color: color, size: size * 0.5),
       ),
     );
   }
