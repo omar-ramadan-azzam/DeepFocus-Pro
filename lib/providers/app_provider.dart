@@ -8,9 +8,10 @@ class AppProvider extends ChangeNotifier {
   int _totalFocusMinutes = 0;
   int _currentStreak = 0;
   int _totalSessions = 0;
-  bool _isRunning = false;
   int _xp = 0;
   int _level = 1;
+  bool _notificationsEnabled = true;
+  bool _motivationalEnabled = true;
 
   String get currentTheme => _currentTheme;
   int get focusDuration => _focusDuration;
@@ -18,9 +19,10 @@ class AppProvider extends ChangeNotifier {
   int get totalFocusMinutes => _totalFocusMinutes;
   int get currentStreak => _currentStreak;
   int get totalSessions => _totalSessions;
-  bool get isRunning => _isRunning;
   int get xp => _xp;
   int get level => _level;
+  bool get notificationsEnabled => _notificationsEnabled;
+  bool get motivationalEnabled => _motivationalEnabled;
 
   AppProvider() {
     loadData();
@@ -36,6 +38,8 @@ class AppProvider extends ChangeNotifier {
     _totalSessions = prefs.getInt('totalSessions') ?? 0;
     _xp = prefs.getInt('xp') ?? 0;
     _level = prefs.getInt('level') ?? 1;
+    _notificationsEnabled = prefs.getBool('notifications') ?? true;
+    _motivationalEnabled = prefs.getBool('motivational') ?? true;
     notifyListeners();
   }
 
@@ -49,6 +53,8 @@ class AppProvider extends ChangeNotifier {
     await prefs.setInt('totalSessions', _totalSessions);
     await prefs.setInt('xp', _xp);
     await prefs.setInt('level', _level);
+    await prefs.setBool('notifications', _notificationsEnabled);
+    await prefs.setBool('motivational', _motivationalEnabled);
   }
 
   void setTheme(String theme) {
@@ -63,20 +69,34 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setBreakDuration(int minutes) {
+    _breakDuration = minutes;
+    saveData();
+    notifyListeners();
+  }
+
+  void setNotifications(bool value) {
+    _notificationsEnabled = value;
+    saveData();
+    notifyListeners();
+  }
+
+  void setMotivational(bool value) {
+    _motivationalEnabled = value;
+    saveData();
+    notifyListeners();
+  }
+
   void completeSession() {
     _totalSessions++;
     _totalFocusMinutes += _focusDuration;
     _xp += 50;
+    _currentStreak++;
     if (_xp >= _level * 200) {
       _level++;
       _xp = 0;
     }
     saveData();
-    notifyListeners();
-  }
-
-  void setRunning(bool value) {
-    _isRunning = value;
     notifyListeners();
   }
 }
