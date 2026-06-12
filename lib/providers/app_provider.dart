@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppProvider extends ChangeNotifier {
-  String _currentTheme = 'deep_gold';
+  String _currentTheme = 'teal';
   int _focusDuration = 25;
   int _breakDuration = 5;
   int _totalFocusMinutes = 0;
